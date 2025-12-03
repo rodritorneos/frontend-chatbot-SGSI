@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SGSI Assistant</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined">
+
+    <style>
+        .chat-area::-webkit-scrollbar { width: 6px; }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #1173d4;
+            border-radius: 10px;
+        }
+
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0; }
+
+        /* -------- ESTILO TABS -------- */
+        .tab-active {
+            background-color: #1173d4 !important;
+            border-color: transparent !important;
+            color: white !important;
+            transform: scale(1.02);
+        }
+        .tab-default {
+            background-color: #1b2a38;
+            border: 1px solid #1173d4;
+            color: #cbd5e1;
+        }
+        .tab-default:hover {
+            background-color: #223445;
+        }
+
+        /* -------- BOTONES -------- */
+        .btn-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            box-shadow: 0 0 10px rgba(17, 115, 212, 0.3);
+            border: 1px solid rgba(17, 115, 212, 0.4);
+        }
+        .btn-main:hover { transform: scale(1.05); background: rgba(255,255,255,0.12); }
+        .btn-danger { background: rgba(255, 60, 60, 0.18) !important; border-color: rgba(255,60,60,0.4) !important; }
+        .btn-large { width: 100%; padding: 14px; font-size: 1rem; }
+
+        /* -------- INPUTS -------- */
+        .input-box {
+            background: #1b2a38;
+            border: 1px solid rgba(17, 115, 212, 0.4);
+            color: white;
+            border-radius: 14px;
+            padding: 14px;
+            box-shadow: 0 0 12px rgba(17, 115, 212, 0.25);
+            transition: 0.2s ease;
+        }
+        .input-box:focus {
+            outline: none;
+            border-color: #1173d4;
+            box-shadow: 0 0 14px rgba(17, 115, 212, 0.6);
+        }
+
+/* -------- MENSAJES -------- */
+
+/* Contenedor del mensaje del usuario y el bot */
+.msg-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start; /* Por defecto los mensajes del bot están a la izquierda */
+    margin-bottom: 10px;
+    align-items: flex-start; /* Asegura que el mensaje esté alineado */
+}
+
+/* Mensaje del usuario */
+.msg-user {
+    background: linear-gradient(135deg, #1173d4, #0a4a8a);
+    padding: 12px 16px;
+    max-width: 80%;
+    border-radius: 14px 14px 4px 14px;
+    box-shadow: 0 0 14px rgba(17, 115, 212, 0.4);
+    border: 1px solid rgba(17, 115, 212, 0.7);
+    margin-bottom: 8px; /* Espaciado entre los mensajes */
+}
+
+/* Mensaje del bot */
+.msg-bot {
+    background: #1b2a38;
+    padding: 12px 16px;
+    max-width: 80%;
+    border-radius: 14px 14px 14px 4px;
+    border: 1px solid rgba(17,115,212,0.3);
+    box-shadow: 0 0 12px rgba(17,115,212,0.25);
+    margin-bottom: 8px; /* Espaciado entre los mensajes */
+    display: flex;
+    align-items: flex-start; /* Alinea el mensaje en el eje vertical */
+}
+
+/* Alineación de los mensajes del usuario a la derecha */
+.msg-container-user {
+    justify-content: flex-end; /* Mensaje del usuario alineado a la derecha */
+}
+    </style>
+</head>
+
+<body class="bg-[#101922] text-white flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-3xl h-[90vh] flex flex-col bg-[#131f2b] border border-[#1173d4]/50 rounded-2xl shadow-lg overflow-hidden">
+
+        <!-- HEADER -->
+        <header class="p-4 bg-[#0d1620] border-b border-[#1173d4]/40">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#1173d4]/20 flex items-center justify-center text-[#1173d4] font-bold">
+                        A
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold">Asistente SGSI</h1>
+                        <p class="text-xs text-gray-400 -mt-1">Elige un modo para comenzar</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="audio-btn" class="btn-main">
+                        <span class="material-symbols-outlined text-lg">volume_up</span> Audio ON
+                    </button>
+
+                    <button id="clear-btn" class="btn-main btn-danger">
+                        <span class="material-symbols-outlined text-lg">delete</span> Limpiar
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="mt-4 flex justify-center gap-4">
+                <button id="tab-chat" class="tab-active px-4 py-2 rounded-lg border font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined">forum</span> Chat
+                </button>
+
+                <button id="tab-escenario" class="tab-default px-4 py-2 rounded-lg border font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined">auto_stories</span> Escenario
+                </button>
+            </div>
+        </header>
+
+        <!-- CHAT -->
+        <main id="chat-mode" class="flex-1 flex flex-col chat-area overflow-y-auto p-4 space-y-4">
+            <div id="chat-box" class="flex flex-col gap-3"></div>
+        </main>
+
+        <!-- ESCENARIO -->
+        <main id="scenario-mode" class="hidden flex-1 flex-col chat-area overflow-y-auto p-4 space-y-4">
+            <div id="scenario-box" class="flex flex-col gap-3"></div>
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="p-4 bg-[#0d1620] border-t border-[#1173d4]/40">
+
+            <!-- CHAT INPUT -->
+            <div id="chat-input" class="flex items-center gap-3">
+                <input id="user-input" class="input-box flex-1" type="text" placeholder="Escribe tu mensaje..." />
+
+                <button id="send-btn" class="btn-main">
+                    <span class="material-symbols-outlined text-lg">send</span> Enviar
+                </button>
+            </div>
+
+            <!-- ESCENARIO INPUT -->
+            <div id="scenario-input-area" class="hidden flex items-center gap-3 mt-2">
+                <input id="scenario-input" class="input-box flex-1" type="text" placeholder="Responde al escenario..." />
+
+                <button id="scenario-send-btn" class="btn-main">
+                    <span class="material-symbols-outlined text-lg">send</span> Responder
+                </button>
+            </div>
+
+            <!-- GENERAR ESCENARIO -->
+            <div id="scenario-generate" class="hidden mt-3">
+                <button id="escenario-btn" class="btn-main btn-large">
+                    <span class="material-symbols-outlined text-lg">auto_stories</span>
+                    Generar Escenario
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script>
+        const tabChat = document.getElementById("tab-chat");
+        const tabEscenario = document.getElementById("tab-escenario");
+
+        const chatMode = document.getElementById("chat-mode");
+        const scenarioMode = document.getElementById("scenario-mode");
+
+        const chatInput = document.getElementById("chat-input");
+        const scenarioInputArea = document.getElementById("scenario-input-area");
+        const scenarioGenerate = document.getElementById("scenario-generate");
+
+        function activarTab(tab) {
+            tabChat.classList.remove("tab-active");
+            tabEscenario.classList.remove("tab-active");
+
+            tabChat.classList.add("tab-default");
+            tabEscenario.classList.add("tab-default");
+
+            tab.classList.add("tab-active");
+            tab.classList.remove("tab-default");
+        }
+
+        tabChat.addEventListener("click", () => {
+            activarTab(tabChat);
+            chatMode.classList.remove("hidden");
+            scenarioMode.classList.add("hidden");
+            chatInput.classList.remove("hidden");
+            scenarioInputArea.classList.add("hidden");
+            scenarioGenerate.classList.add("hidden");
+        });
+
+        tabEscenario.addEventListener("click", () => {
+            activarTab(tabEscenario);
+            chatMode.classList.add("hidden");
+            scenarioMode.classList.remove("hidden");
+            chatInput.classList.add("hidden");
+            scenarioInputArea.classList.remove("hidden");
+            scenarioGenerate.classList.remove("hidden");
+        });
+
+        document.getElementById("escenario-btn").addEventListener("click", () => {
+            tabEscenario.click();
+        });
+    </script>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
