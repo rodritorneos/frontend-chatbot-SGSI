@@ -1,19 +1,12 @@
 // ======================================================
 // CONFIG
 // ======================================================
-const API_URL = "https://principle-reports-professor-further.trycloudflare.com/chat";
-const ESCENARIO_URL = "https://principle-reports-professor-further.trycloudflare.com/escenario";
+const API_URL = "http://localhost:8000/chat";
 
 // Chat elements
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");
 const sendBtn = document.getElementById("send-btn");
-
-// Scenario elements
-const scenarioBox = document.getElementById("scenario-box");
-const scenarioInput = document.getElementById("scenario-input");
-const scenarioSendBtn = document.getElementById("scenario-send-btn");
-const escenarioBtn = document.getElementById("escenario-btn");
 
 // General buttons
 const clearBtn = document.getElementById("clear-btn");
@@ -24,8 +17,6 @@ const audioBtn = document.getElementById("audio-btn");
 // ======================================================
 let chatHistory = JSON.parse(sessionStorage.getItem("chatHistory") || "[]");
 let contextHistory = [];
-let scenarioHistory = [];
-let currentScenarioId = null;
 
 // ======================================================
 // LOAD HISTORY ON START
@@ -56,11 +47,11 @@ function smoothScroll(container) {
 
 // ======================================================
 // CREATE MESSAGE BUBBLE
-// mode: "chat" o "scenario"
-// sender: "user" o "bot"
+// mode: "chat"
+// sender: "user" or "bot"
 // ======================================================
 function addMessageBubble(mode, sender, text, isLoading = false) {
-    const container = mode === "chat" ? chatBox : scenarioBox;
+    const container = mode === "chat" ? chatBox : null;
 
     // Contenedor que usará Flexbox
     const wrapper = document.createElement("div");
@@ -155,7 +146,7 @@ async function sendMessage() {
         contextHistory.push({ role: "assistant", content: botText });
 
         if (data.audio_url && sessionStorage.getItem("audioEnabled") === "true") {
-            new Audio("https://principle-reports-professor-further.trycloudflare.com" + data.audio_url).play();
+            new Audio("http://localhost:8000" + data.audio_url).play();
         }
 
     } catch (error) {
@@ -167,21 +158,9 @@ async function sendMessage() {
 // CLEAR CHAT
 // ======================================================
 clearBtn.addEventListener("click", () => {
-    const chatVisible = !document.getElementById("chat-mode").classList.contains("hidden");
-    const scenarioVisible = !document.getElementById("scenario-mode").classList.contains("hidden");
-
-    if (chatVisible) {
-        chatBox.innerHTML = "";
-        chatHistory = [];
-        contextHistory = [];
-    }
-
-    if (scenarioVisible) {
-        scenarioBox.innerHTML = "";
-        scenarioHistory = [];
-        currentScenarioId = null;
-    }
-
+    chatBox.innerHTML = "";
+    chatHistory = [];
+    contextHistory = [];
     saveHistory();
 });
 
@@ -210,96 +189,6 @@ function updateAudioButton() {
 sendBtn.addEventListener("click", sendMessage);
 userInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
-});
-
-// ======================================================
-// SCENARIO MODE — GENERATE SCENARIO
-// ======================================================
-async function generarEscenario() {
-    // Limpiar la conversación previa del escenario antes de generar uno nuevo
-    scenarioBox.innerHTML = "";
-    scenarioHistory = [];
-    currentScenarioId = null;
-
-    const loadingBubble = addMessageBubble("scenario", "bot", "", true);
-
-    try {
-        const response = await fetch(ESCENARIO_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fase: "generar" })
-        });
-
-        const data = await response.json();
-        const texto = data.response || "Error al generar escenario.";
-
-        await typeWriterEffect(loadingBubble, texto);
-
-        currentScenarioId = data.scenario_id;
-        scenarioHistory = [];
-
-        if (data.audio_url && sessionStorage.getItem("audioEnabled") === "true") {
-            new Audio("https://principle-reports-professor-further.trycloudflare.com" + data.audio_url).play();
-        }
-
-    } catch (error) {
-        loadingBubble.textContent = "Error de conexión al generar escenario.";
-    }
-}
-
-escenarioBtn.addEventListener("click", generarEscenario);
-
-// ======================================================
-// SCENARIO MODE — SEND RESPONSE
-// ======================================================
-async function enviarRespuestaEscenario(text) {
-    if (!currentScenarioId) {
-        alert("No hay escenario activo. Genera uno primero.");
-        return;
-    }
-
-    addMessageBubble("scenario", "user", text);
-    scenarioInput.value = "";
-
-    const loadingBubble = addMessageBubble("scenario", "bot", "", true);
-
-    try {
-        const response = await fetch(ESCENARIO_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                fase: "retro",
-                scenario_id: currentScenarioId,
-                respuesta_usuario: text
-            })
-        });
-
-        const data = await response.json();
-        const retro = data.response || "Error en la retroalimentación.";
-
-        await typeWriterEffect(loadingBubble, retro);
-
-        scenarioHistory.push({ role: "assistant", content: retro });
-
-        if (data.audio_url && sessionStorage.getItem("audioEnabled") === "true") {
-            new Audio("https://principle-reports-professor-further.trycloudflare.com" + data.audio_url).play();
-        }
-
-    } catch (error) {
-        loadingBubble.textContent = "Error de conexión al enviar respuesta.";
-    }
-}
-
-scenarioSendBtn.addEventListener("click", () => {
-    const txt = scenarioInput.value.trim();
-    if (txt) enviarRespuestaEscenario(txt);
-});
-
-scenarioInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") {
-        const txt = scenarioInput.value.trim();
-        if (txt) enviarRespuestaEscenario(txt);
-    }
 });
 
 // ======================================================
