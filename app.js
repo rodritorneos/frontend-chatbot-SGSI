@@ -11,6 +11,7 @@ const sendBtn = document.getElementById("send-btn");
 // General buttons
 const clearBtn = document.getElementById("clear-btn");
 const audioBtn = document.getElementById("audio-btn");
+const avatarBtn = document.getElementById("avatar-btn");
 
 // ======================================================
 // HISTORIAL
@@ -138,19 +139,52 @@ async function sendMessage() {
         const data = await response.json();
         const botText = data.response || "Error al obtener respuesta.";
 
-        // ✅ DETECCIÓN DEL FILTRO (SIN AFECTAR NADA MÁS)
+        // ✅ DETECCIÓN DEL FILTRO
         const wasFiltered = data.filtered === true;
-        console.log("¿Respuesta rechazada por el filtro?:", wasFiltered);
 
-        await typeWriterEffect(loadingBubble, botText);
+        // ✅ DEFINIR EXPRESIÓN BASE
+        if (wasFiltered) {
+            setAvatarAlertBase();
+        } else {
+            setAvatarNeutralBase();
+        }
 
-        chatHistory.push({ sender: "bot", text: botText });
-        saveHistory();
+        const audioEnabled = sessionStorage.getItem("audioEnabled") === "true";
+        let audio = null;
 
-        contextHistory.push({ role: "assistant", content: botText });
+        if (data.audio_url && audioEnabled) {
+            audio = new Audio("http://localhost:8000" + data.audio_url);
+        }
 
-        if (data.audio_url && sessionStorage.getItem("audioEnabled") === "true") {
-            new Audio("http://localhost:8000" + data.audio_url).play();
+        // ✅ SI HAY AUDIO → TEXTO + BOCA VAN JUNTOS
+        if (audio) {
+            audio.onplay = async () => {
+                startAvatarTalking(wasFiltered);
+                await typeWriterEffect(loadingBubble, botText); // ✅ TEXTO SINCRONIZADO CON EL HABLA
+            };
+
+            audio.onended = () => {
+                stopAvatarTalking();
+                if (wasFiltered) returnToNeutralAfterAlert();
+
+                chatHistory.push({ sender: "bot", text: botText });
+                saveHistory();
+                contextHistory.push({ role: "assistant", content: botText });
+            };
+
+            audio.play();
+
+        } else {
+            // ✅ SIN AUDIO → SE MANTIENE COMO YA TE FUNCIONABA BIEN
+            startAvatarTalking(wasFiltered);
+            await typeWriterEffect(loadingBubble, botText);
+
+            stopAvatarTalking();
+            if (wasFiltered) returnToNeutralAfterAlert();
+
+            chatHistory.push({ sender: "bot", text: botText });
+            saveHistory();
+            contextHistory.push({ role: "assistant", content: botText });
         }
 
     } catch (error) {
@@ -188,6 +222,110 @@ function updateAudioButton() {
 }
 
 // ======================================================
+// AVATAR TOGGLE
+// ======================================================
+
+const avatarContainer = document.getElementById("avatar-container");
+
+if (!sessionStorage.getItem("avatarEnabled"))
+    sessionStorage.setItem("avatarEnabled", "true");
+
+updateAvatarToggleButton();
+
+avatarBtn.addEventListener("click", () => {
+    const current = sessionStorage.getItem("avatarEnabled") === "true";
+    sessionStorage.setItem("avatarEnabled", current ? "false" : "true");
+    updateAvatarToggleButton();
+});
+
+function updateAvatarToggleButton() {
+    const enabled = sessionStorage.getItem("avatarEnabled") === "true";
+
+    if (enabled) {
+        avatarBtn.textContent = "Avatar ON";
+        avatarBtn.classList.remove("opacity-50");
+
+        // 👉 Mostrar avatar
+        avatarContainer.classList.remove("hidden");
+
+    } else {
+        avatarBtn.textContent = "Avatar OFF";
+        avatarBtn.classList.add("opacity-50");
+
+        // 👉 Ocultar avatar
+        avatarContainer.classList.add("hidden");
+    }
+}
+
+
+// ======================================================
+// AVATAR CONTROL (SINCRONIZADO)
+// ======================================================
+
+const avatar = document.getElementById("avatar");
+let avatarInterval = null;
+let avatarMouthOpen = false;
+let avatarMode = "neutral"; // "neutral" | "alerta"
+
+function applyAvatarState() {
+    if (!avatar) return;
+    if (sessionStorage.getItem("avatarEnabled") !== "true") return;
+
+    const state = avatarMouthOpen ? "Abierto" : "Cerrado";
+
+    if (avatarMode === "alerta") {
+        avatar.src = `img/alerta${state}.png`;
+    } else {
+        avatar.src = `img/neutral${state}.png`;
+    }
+}
+
+function setAvatarNeutralBase() {
+    avatarMode = "neutral";
+    avatarMouthOpen = false;
+    applyAvatarState();
+}
+
+function setAvatarAlertBase() {
+    avatarMode = "alerta";
+    avatarMouthOpen = false;
+    applyAvatarState();
+}
+
+function startAvatarTalking(isAlert) {
+    if (sessionStorage.getItem("avatarEnabled") !== "true") return;
+
+    stopAvatarTalking();
+    avatarMouthOpen = false;
+    avatarMode = isAlert ? "alerta" : "neutral";
+
+    avatarInterval = setInterval(() => {
+        avatarMouthOpen = !avatarMouthOpen;
+        applyAvatarState();
+    }, 160);
+}
+
+function stopAvatarTalking() {
+    if (sessionStorage.getItem("avatarEnabled") !== "true") return;
+
+    if (avatarInterval) {
+        clearInterval(avatarInterval);
+        avatarInterval = null;
+    }
+    avatarMouthOpen = false;
+    applyAvatarState();
+}
+
+function returnToNeutralAfterAlert() {
+    setTimeout(() => {
+        avatarMode = "neutral";
+        avatarMouthOpen = false;
+        applyAvatarState();
+    }, 900);
+}
+
+
+// ======================================================
 // CHAT EVENTS
 // ======================================================
 sendBtn.addEventListener("click", sendMessage);
@@ -211,3 +349,4 @@ document.head.insertAdjacentHTML("beforeend", `
     }
 </style>
 `);
+

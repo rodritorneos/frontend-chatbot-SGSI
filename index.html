@@ -111,7 +111,20 @@
     </style>
 </head>
 
-<body class="bg-[#101922] text-white flex items-center justify-center min-h-screen p-4">
+<body class="bg-[#101922] text-white flex items-center justify-center min-h-screen p-4 gap-6">
+
+    <!-- AVATAR -->
+<div id="avatar-container" class="flex flex-col items-center justify-center bg-[#131f2b] border border-[#1173d4]/50 rounded-2xl p-4 shadow-lg">
+    <img 
+    id="avatar"
+    src="img/neutralCerrado.png"
+    alt="Avatar"
+    style="width: 740px; height: auto;"
+    class="select-none pointer-events-none transition-all duration-150"
+/>
+    <p class="mt-3 text-sm text-gray-400">Asistente SGSI</p>
+</div>
+
 
     <div class="w-full max-w-3xl h-[90vh] flex flex-col bg-[#131f2b] border border-[#1173d4]/50 rounded-2xl shadow-lg overflow-hidden">
 
@@ -129,10 +142,16 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+
+                <!-- BOTÓN AVATAR -->
+                    <button id="avatar-btn" class="btn-main">
+                        <span class="material-symbols-outlined text-lg">person</span> Avatar ON
+                    </button>
+                <!-- BOTÓN AUDIO -->
                     <button id="audio-btn" class="btn-main">
                         <span class="material-symbols-outlined text-lg">volume_up</span> Audio ON
                     </button>
-
+                <!-- BOTÓN LIMPIAR -->
                     <button id="clear-btn" class="btn-main btn-danger">
                         <span class="material-symbols-outlined text-lg">delete</span> Limpiar
                     </button>
