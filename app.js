@@ -138,6 +138,10 @@ async function sendMessage() {
         const data = await response.json();
         const botText = data.response || "Error al obtener respuesta.";
 
+        // ✅ DETECCIÓN DEL FILTRO (SIN AFECTAR NADA MÁS)
+        const wasFiltered = data.filtered === true;
+        console.log("¿Respuesta rechazada por el filtro?:", wasFiltered);
+
         await typeWriterEffect(loadingBubble, botText);
 
         chatHistory.push({ sender: "bot", text: botText });
