@@ -212,11 +212,19 @@ audioBtn.addEventListener("click", () => {
 });
 
 function updateAudioButton() {
-    if (sessionStorage.getItem("audioEnabled") === "true") {
-        audioBtn.textContent = "🔊 Audio ON";
+    const enabled = sessionStorage.getItem("audioEnabled") === "true";
+
+    if (enabled) {
+        audioBtn.innerHTML = `
+            <span class="material-symbols-outlined text-lg">volume_up</span>
+            Audio ON
+        `;
         audioBtn.classList.remove("opacity-50");
     } else {
-        audioBtn.textContent = "🔇 Audio OFF";
+        audioBtn.innerHTML = `
+            <span class="material-symbols-outlined text-lg">volume_off</span>
+            Audio OFF
+        `;
         audioBtn.classList.add("opacity-50");
     }
 }
