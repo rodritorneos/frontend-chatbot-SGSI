@@ -1,7 +1,7 @@
 // ======================================================
 // CONFIG
 // ======================================================
-const API_URL = "https://tamil-patent-sailing-lovely.trycloudflare.com/chat";
+const API_URL = "https://watched-hawaii-exclusion-strips.trycloudflare.com/chat";
 
 // Chat elements
 const chatBox = document.getElementById("chat-box");
@@ -212,23 +212,14 @@ audioBtn.addEventListener("click", () => {
 });
 
 function updateAudioButton() {
-    const enabled = sessionStorage.getItem("audioEnabled") === "true";
-
-    if (enabled) {
-        audioBtn.innerHTML = `
-            <span class="material-symbols-outlined text-lg">volume_up</span>
-            Audio ON
-        `;
+    if (sessionStorage.getItem("audioEnabled") === "true") {
+        audioBtn.textContent = "🔊 Audio ON";
         audioBtn.classList.remove("opacity-50");
     } else {
-        audioBtn.innerHTML = `
-            <span class="material-symbols-outlined text-lg">volume_off</span>
-            Audio OFF
-        `;
+        audioBtn.textContent = "🔇 Audio OFF";
         audioBtn.classList.add("opacity-50");
     }
 }
-
 
 // ======================================================
 // AVATAR TOGGLE
